@@ -6,7 +6,7 @@ import os
 
 # --- KONFIGURASI ---
 NAMA_FILE_KUNCI = "rahasia.json"
-NAMA_GOOGLE_SHEET = "Database Absensi Guru"
+NAMA_GOOGLE_SHEET = "DATABASE ABSENSI GURU MUTUROJO"
 NAMA_FILE_LOGO = "logo.png"
 
 st.set_page_config(page_title="Absensi SMK Muhammadiyah 1 Ngoro", page_icon="📝")
