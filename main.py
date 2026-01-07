@@ -6,7 +6,7 @@ import os
 
 # --- KONFIGURASI ---
 NAMA_FILE_KUNCI = "rahasia.json"
-NAMA_GOOGLE_SHEET = "DATABASE ABSENSI GURU MUTUROJO"
+NAMA_GOOGLE_SHEET = "Database Absensi Guru"
 NAMA_FILE_LOGO = "logo.png"
 
 st.set_page_config(page_title="Absensi SMK Muhammadiyah 1 Ngoro", page_icon="📝")
@@ -91,29 +91,27 @@ list_mapel = [
     "Lainnya"
 ]
 
-# --- FUNGSI KONEKSI (PERBAIKAN KUNCI OTOMATIS) ---
+# --- FUNGSI KONEKSI ---
 def connect_to_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     
     try:
-        # 1. Cek apakah ini di Laptop (Ada file rahasia.json?)
         if os.path.exists(NAMA_FILE_KUNCI):
             creds = Credentials.from_service_account_file(NAMA_FILE_KUNCI, scopes=scopes)
         
-        # 2. Jika tidak ada file, berarti di Internet (Pakai Secrets)
         elif "gcp_service_account" in st.secrets:
-            # Ambil data dari Secrets dan buat salinannya (agar aman)
+            # Ambil data dari Secrets
             creds_dict = dict(st.secrets["gcp_service_account"])
             
-            # === BAGIAN PENTING: MEMBERSIHKAN KUNCI ===
-            # Mengubah huruf "\n" menjadi tombol ENTER beneran
+            # --- PERBAIKAN PENTING ---
+            # Kode ini mengubah "\n" (tulisan) menjadi ENTER (tombol)
             if "private_key" in creds_dict:
                 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
             
             creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         
         else:
-            st.error("❌ File Kunci tidak ditemukan! Harap masukkan di Secrets.")
+            st.error("❌ File Kunci tidak ditemukan! Cek Secrets.")
             st.stop()
             
         client = gspread.authorize(creds)
@@ -121,14 +119,12 @@ def connect_to_sheet():
         return sheet
         
     except Exception as e:
-        st.error(f"❌ Gagal Konek ke Database: {e}")
+        st.error(f"❌ Error Detail: {e}")
         st.stop()
 
 # --- TAMPILAN APLIKASI ---
 if os.path.exists(NAMA_FILE_LOGO):
     st.image(NAMA_FILE_LOGO, width=150)
-else:
-    st.write("") 
 
 st.title("🏫 Jurnal & Absensi Guru")
 st.subheader("SMK Muhammadiyah 1 Ngoro")
@@ -141,18 +137,18 @@ with st.form("form_absensi"):
         kelas = st.selectbox("Kelas", list_kelas)
     
     mapel = st.selectbox("Mata Pelajaran", list_mapel)
-    materi = st.text_area("Materi / Aktivitas KBM", placeholder="Jelaskan kegiatan pembelajaran...")
+    materi = st.text_area("Materi / Aktivitas KBM", placeholder="Isi kegiatan...")
     
-    st.write("Bukti Foto Kegiatan:")
+    st.write("Bukti Foto:")
     gambar = st.camera_input("Ambil Foto")
     tombol_kirim = st.form_submit_button("Kirim Laporan")
 
 # --- PROSES SIMPAN ---
 if tombol_kirim:
     if not materi:
-        st.warning("⚠️ Mohon lengkapi isian Materi!")
+        st.warning("⚠️ Mohon lengkapi Materi!")
     else:
-        with st.spinner("Sedang mengirim data..."):
+        with st.spinner("Mengirim data..."):
             waktu = datetime.now()
             tgl = waktu.strftime("%Y-%m-%d")
             jam = waktu.strftime("%H:%M:%S")
@@ -163,7 +159,7 @@ if tombol_kirim:
             try:
                 sheet = connect_to_sheet()
                 sheet.append_row(data_baru)
-                st.success(f"✅ Laporan berhasil dikirim!")
+                st.success(f"✅ Berhasil!")
                 st.balloons()
             except Exception as e:
-                st.error(f"Gagal menyimpan data: {e}")
+                st.error(f"Gagal: {e}")
