@@ -1,4 +1,4 @@
-import streamlit as st
+iimport streamlit as st
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
@@ -91,7 +91,7 @@ list_mapel = [
     "Lainnya"
 ]
 
-# --- FUNGSI KONEKSI (DIPERBAIKI) ---
+# --- FUNGSI KONEKSI (PERBAIKAN KUNCI OTOMATIS) ---
 def connect_to_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     
@@ -102,11 +102,11 @@ def connect_to_sheet():
         
         # 2. Jika tidak ada file, berarti di Internet (Pakai Secrets)
         elif "gcp_service_account" in st.secrets:
-            # Ambil data dari Secrets
+            # Ambil data dari Secrets dan buat salinannya (agar aman)
             creds_dict = dict(st.secrets["gcp_service_account"])
             
-            # --- PERBAIKAN PENTING DI SINI ---
-            # Mengubah huruf "\n" menjadi Enter beneran agar kuncinya terbaca
+            # === BAGIAN PENTING: MEMBERSIHKAN KUNCI ===
+            # Mengubah huruf "\n" menjadi tombol ENTER beneran
             if "private_key" in creds_dict:
                 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
             
@@ -121,12 +121,10 @@ def connect_to_sheet():
         return sheet
         
     except Exception as e:
-        # Tampilkan error detail jika gagal
         st.error(f"❌ Gagal Konek ke Database: {e}")
         st.stop()
 
 # --- TAMPILAN APLIKASI ---
-# Tampilkan logo jika filenya ada (aman dari error)
 if os.path.exists(NAMA_FILE_LOGO):
     st.image(NAMA_FILE_LOGO, width=150)
 else:
