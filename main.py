@@ -91,7 +91,7 @@ list_mapel = [
     "Lainnya"
 ]
 
-# --- FUNGSI KONEKSI CANGGIH (BISA LAPTOP & INTERNET) ---
+# --- FUNGSI KONEKSI (DIPERBAIKI) ---
 def connect_to_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     
@@ -100,9 +100,16 @@ def connect_to_sheet():
         if os.path.exists(NAMA_FILE_KUNCI):
             creds = Credentials.from_service_account_file(NAMA_FILE_KUNCI, scopes=scopes)
         
-        # 2. Jika tidak ada file, berarti di Internet (Cari di Brankas Secrets)
+        # 2. Jika tidak ada file, berarti di Internet (Pakai Secrets)
         elif "gcp_service_account" in st.secrets:
-            creds_dict = st.secrets["gcp_service_account"]
+            # Ambil data dari Secrets
+            creds_dict = dict(st.secrets["gcp_service_account"])
+            
+            # --- PERBAIKAN PENTING DI SINI ---
+            # Mengubah huruf "\n" menjadi Enter beneran agar kuncinya terbaca
+            if "private_key" in creds_dict:
+                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+            
             creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         
         else:
@@ -114,14 +121,15 @@ def connect_to_sheet():
         return sheet
         
     except Exception as e:
+        # Tampilkan error detail jika gagal
         st.error(f"❌ Gagal Konek ke Database: {e}")
         st.stop()
 
 # --- TAMPILAN APLIKASI ---
+# Tampilkan logo jika filenya ada (aman dari error)
 if os.path.exists(NAMA_FILE_LOGO):
     st.image(NAMA_FILE_LOGO, width=150)
 else:
-    # Jika logo tidak ketemu di internet (mungkin belum keload), pakai teks saja
     st.write("") 
 
 st.title("🏫 Jurnal & Absensi Guru")
@@ -160,4 +168,4 @@ if tombol_kirim:
                 st.success(f"✅ Laporan berhasil dikirim!")
                 st.balloons()
             except Exception as e:
-                st.error("Gagal menyimpan data.")
+                st.error(f"Gagal menyimpan data: {e}")
