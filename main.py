@@ -1,14 +1,13 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-import os # Tambahan library untuk cek file gambar
+import os
 
 # --- KONFIGURASI ---
 NAMA_FILE_KUNCI = "rahasia.json"
 NAMA_GOOGLE_SHEET = "Database Absensi Guru"
-NAMA_FILE_LOGO = "logo.png" # Nama file gambar logo yang baru dimasukkan
+NAMA_FILE_LOGO = "logo.png"
 
 st.set_page_config(page_title="Absensi SMK Muhammadiyah 1 Ngoro", page_icon="📝")
 
@@ -53,7 +52,7 @@ list_nama_guru = [
     "Lainnya"
 ]
 
-# --- DATA KELAS (Sesuai Gambar) ---
+# --- DATA KELAS ---
 list_kelas = [
     "X-TKR 1", "X-TKR 2", "X-TKR 3", 
     "X-TSM 1", "X-TSM 2", 
@@ -92,27 +91,38 @@ list_mapel = [
     "Lainnya"
 ]
 
-# --- FUNGSI KONEKSI ---
+# --- FUNGSI KONEKSI CANGGIH (BISA LAPTOP & INTERNET) ---
 def connect_to_sheet():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    
     try:
-        creds = Credentials.from_service_account_file(NAMA_FILE_KUNCI, scopes=scopes)
+        # 1. Cek apakah ini di Laptop (Ada file rahasia.json?)
+        if os.path.exists(NAMA_FILE_KUNCI):
+            creds = Credentials.from_service_account_file(NAMA_FILE_KUNCI, scopes=scopes)
+        
+        # 2. Jika tidak ada file, berarti di Internet (Cari di Brankas Secrets)
+        elif "gcp_service_account" in st.secrets:
+            creds_dict = st.secrets["gcp_service_account"]
+            creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        
+        else:
+            st.error("❌ File Kunci tidak ditemukan! Harap masukkan di Secrets.")
+            st.stop()
+            
         client = gspread.authorize(creds)
         sheet = client.open(NAMA_GOOGLE_SHEET).sheet1
         return sheet
+        
     except Exception as e:
-        st.error(f"❌ Gagal Konek ke Google Sheet: {e}")
+        st.error(f"❌ Gagal Konek ke Database: {e}")
         st.stop()
 
 # --- TAMPILAN APLIKASI ---
-
-# BAGIAN LOGO (Kode Baru)
-# Kita cek dulu apakah filenya benar-benar ada biar tidak error
 if os.path.exists(NAMA_FILE_LOGO):
-    # Tampilkan gambar dengan lebar 150 pixel (bisa diatur)
     st.image(NAMA_FILE_LOGO, width=150)
 else:
-    st.warning(f"⚠️ File '{NAMA_FILE_LOGO}' belum ditemukan di dalam folder VS Code.")
+    # Jika logo tidak ketemu di internet (mungkin belum keload), pakai teks saja
+    st.write("") 
 
 st.title("🏫 Jurnal & Absensi Guru")
 st.subheader("SMK Muhammadiyah 1 Ngoro")
@@ -125,32 +135,29 @@ with st.form("form_absensi"):
         kelas = st.selectbox("Kelas", list_kelas)
     
     mapel = st.selectbox("Mata Pelajaran", list_mapel)
-    
-    materi = st.text_area("Materi / Aktivitas KBM", placeholder="Jelaskan kegiatan pembelajaran hari ini secara singkat...")
+    materi = st.text_area("Materi / Aktivitas KBM", placeholder="Jelaskan kegiatan pembelajaran...")
     
     st.write("Bukti Foto Kegiatan:")
     gambar = st.camera_input("Ambil Foto")
-    
     tombol_kirim = st.form_submit_button("Kirim Laporan")
 
 # --- PROSES SIMPAN ---
 if tombol_kirim:
     if not materi:
-        st.warning("⚠️ Mohon lengkapi isian Materi/Aktivitas!")
+        st.warning("⚠️ Mohon lengkapi isian Materi!")
     else:
-        with st.spinner("Sedang mengirim data ke server..."):
+        with st.spinner("Sedang mengirim data..."):
             waktu = datetime.now()
             tgl = waktu.strftime("%Y-%m-%d")
             jam = waktu.strftime("%H:%M:%S")
             status_foto = "Ada Foto" if gambar else "Tanpa Foto"
             
-            # Data yang akan dikirim
             data_baru = [tgl, jam, nama, kelas, mapel, materi, status_foto]
             
             try:
                 sheet = connect_to_sheet()
                 sheet.append_row(data_baru)
-                st.success(f"✅ Terima kasih, Laporan KBM berhasil disimpan!")
+                st.success(f"✅ Laporan berhasil dikirim!")
                 st.balloons()
             except Exception as e:
-                st.error(f"Gagal menyimpan data: {e}")
+                st.error("Gagal menyimpan data.")
