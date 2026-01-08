@@ -148,18 +148,18 @@ if tombol_kirim:
         st.warning("⚠️ Mohon lengkapi Materi!")
     else:
         with st.spinner("Mengirim data..."):
-# Tambah 7 jam untuk mengubah waktu Server (UTC) jadi WIB
-waktu = datetime.now() + timedelta(hours=7)
-            tgl = waktu.strftime("%Y-%m-%d")
-            jam = waktu.strftime("%H:%M:%S")
-            status_foto = "Ada Foto" if gambar else "Tanpa Foto"
+            # PERHATIKAN: Baris di bawah ini MENJOROK ke dalam (ada spasi/tab)
+            waktu_wib = datetime.now() + timedelta(hours=7) 
+            tgl = waktu_wib.strftime("%Y-%m-%d")
+            jam = waktu_wib.strftime("%H:%M:%S")
             
+            status_foto = "Ada Foto" if gambar else "Tanpa Foto"
             data_baru = [tgl, jam, nama, kelas, mapel, materi, status_foto]
             
             try:
                 sheet = connect_to_sheet()
                 sheet.append_row(data_baru)
-                st.success(f"✅ Berhasil Terkirim!")
+                st.success(f"✅ Laporan Terkirim! (Waktu: {jam})")
                 st.balloons()
             except Exception as e:
                 st.error(f"Gagal Simpan: {e}")
