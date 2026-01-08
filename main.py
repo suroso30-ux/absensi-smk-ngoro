@@ -5,8 +5,10 @@ from google.oauth2.service_account import Credentials
 import os
 
 # --- KONFIGURASI ---
+# GANTI BAGIAN DALAM TANDA KUTIP INI DENGAN ID DARI LINK SPREADSHEET ANDA
+ID_SHEET = "https://docs.google.com/spreadsheets/d/10wirDq6fPOkloUfRk7iLwHN5JSKGYUG9X7Fyjq9_vu8/edit?usp=sharing" 
+
 NAMA_FILE_KUNCI = "rahasia.json"
-NAMA_GOOGLE_SHEET = "Database Absensi Guru"
 NAMA_FILE_LOGO = "logo.png"
 
 st.set_page_config(page_title="Absensi SMK Muhammadiyah 1 Ngoro", page_icon="📝")
@@ -100,26 +102,23 @@ def connect_to_sheet():
             creds = Credentials.from_service_account_file(NAMA_FILE_KUNCI, scopes=scopes)
         
         elif "gcp_service_account" in st.secrets:
-            # Ambil data dari Secrets
             creds_dict = dict(st.secrets["gcp_service_account"])
-            
-            # --- PERBAIKAN PENTING ---
-            # Kode ini mengubah "\n" (tulisan) menjadi ENTER (tombol)
             if "private_key" in creds_dict:
                 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-            
             creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         
         else:
-            st.error("❌ File Kunci tidak ditemukan! Cek Secrets.")
+            st.error("❌ File Kunci tidak ditemukan di Secrets!")
             st.stop()
             
         client = gspread.authorize(creds)
-        sheet = client.open(NAMA_GOOGLE_SHEET).sheet1
+        # KITA PAKAI OPEN BY KEY (LEBIH KUAT)
+        sheet = client.open_by_key(ID_SHEET).sheet1
         return sheet
         
     except Exception as e:
-        st.error(f"❌ Error Detail: {e}")
+        # Tampilkan error asli agar ketahuan
+        st.error(f"❌ Gagal Konek: {e}")
         st.stop()
 
 # --- TAMPILAN APLIKASI ---
@@ -159,7 +158,7 @@ if tombol_kirim:
             try:
                 sheet = connect_to_sheet()
                 sheet.append_row(data_baru)
-                st.success(f"✅ Berhasil!")
+                st.success(f"✅ Berhasil Terkirim!")
                 st.balloons()
             except Exception as e:
-                st.error(f"Gagal: {e}")
+                st.error(f"Gagal Simpan: {e}")
