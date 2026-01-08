@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 import gspread
 from google.oauth2.service_account import Credentials
 import os
@@ -148,7 +148,8 @@ if tombol_kirim:
         st.warning("⚠️ Mohon lengkapi Materi!")
     else:
         with st.spinner("Mengirim data..."):
-            waktu = datetime.now()
+# Tambah 7 jam untuk mengubah waktu Server (UTC) jadi WIB
+waktu = datetime.now() + timedelta(hours=7)
             tgl = waktu.strftime("%Y-%m-%d")
             jam = waktu.strftime("%H:%M:%S")
             status_foto = "Ada Foto" if gambar else "Tanpa Foto"
