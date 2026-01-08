@@ -6,7 +6,7 @@ import os
 
 # --- KONFIGURASI ---
 # GANTI BAGIAN DALAM TANDA KUTIP INI DENGAN ID DARI LINK SPREADSHEET ANDA
-ID_SHEET = "https://docs.google.com/spreadsheets/d/10wirDq6fPOkloUfRk7iLwHN5JSKGYUG9X7Fyjq9_vu8/edit?usp=sharing" 
+ID_SHEET = "10wirDq6fPOkloUfRk7iLwHN5JSKGYUG9X7Fyjq9_vu8"
 
 NAMA_FILE_KUNCI = "rahasia.json"
 NAMA_FILE_LOGO = "logo.png"
